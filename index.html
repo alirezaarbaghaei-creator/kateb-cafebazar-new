@@ -64,12 +64,35 @@
 
       // Service Worker only for web/PWA — disabled in Android WebView/APK
       (function () {
-        var isWeb = !window.matchMedia('(display-mode: standalone)').matches
+        var isNative = !!(window.Capacitor && window.Capacitor.isNativePlatform && window.Capacitor.isNativePlatform());
+        var isWeb = !isNative
+          && !window.matchMedia('(display-mode: standalone)').matches
           && window.location.protocol.startsWith('http')
           && !window.AndroidBridge;
         if (isWeb && 'serviceWorker' in navigator) {
           window.addEventListener('load', function () {
-            navigator.serviceWorker.register('/sw.js').catch(function () {});
+            navigator.serviceWorker.register('/sw.js').then(function (reg) {
+              // A new deploy ships a new sw.js (new CACHE_VERSION): when it
+              // arrives, claim + reload once so the user sees the update
+              // without clearing cache. controllerchange fires in every open
+              // tab — guard with sessionStorage so only one reloads.
+              function reloadOnce() {
+                try {
+                  if (!sessionStorage.getItem('kateb_update_reloaded')) {
+                    sessionStorage.setItem('kateb_update_reloaded', '1');
+                    window.location.reload();
+                  }
+                } catch (e) { window.location.reload(); }
+              }
+              if (reg.waiting) reloadOnce();
+              reg.addEventListener('updatefound', function () {
+                var sw = reg.installing;
+                if (sw) sw.addEventListener('statechange', function () {
+                  if (sw.state === 'installed' && navigator.serviceWorker.controller) reloadOnce();
+                });
+              });
+              navigator.serviceWorker.addEventListener('controllerchange', reloadOnce);
+            }).catch(function () {});
           });
         }
       })();

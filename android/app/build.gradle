@@ -13,10 +13,12 @@ android {
         applicationId "com.kateb.app"
         minSdkVersion rootProject.ext.minSdkVersion
         targetSdkVersion rootProject.ext.targetSdkVersion
-        // The in-app diagnostics panel was removed from the release build; log
-        // capture stays on for support, but there is no UI to open it.
-        versionCode 16
-        versionName "1.6.9"
+        // UPDATE FIX: versionCode MUST increase on every release, or Android /
+        // Cafe Bazaar treats the new APK as "same version" and keeps running
+        // stale cached data. CI exports KATEB_VERSION_CODE (git commit count);
+        // local builds fall back to 16 so nothing breaks offline.
+        versionCode (System.getenv("KATEB_VERSION_CODE")?.toInteger() ?: 16)
+        versionName System.getenv("KATEB_VERSION_NAME") ?: "1.6.9"
         testInstrumentationRunner "androidx.test.runner.AndroidJUnitRunner"
         aaptOptions {
              // Files and dirs to omit from the packaged assets dir, modified to accommodate modern web apps.

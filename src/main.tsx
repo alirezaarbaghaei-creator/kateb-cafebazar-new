@@ -2,6 +2,8 @@ import { StrictMode, Component, type ReactNode } from 'react';
 import { createRoot } from 'react-dom/client';
 import './index.css';
 import App from './App.tsx';
+import { isNativeApp } from '@/lib/capacitor';
+import { runUpdateCheck, startWebUpdatePolling } from '@/lib/appUpdate';
 
 class ErrorBoundary extends Component<{ children: ReactNode }, { hasError: boolean }> {
   state = { hasError: false };
@@ -42,3 +44,9 @@ createRoot(document.getElementById('root')!).render(
     </ErrorBoundary>
   </StrictMode>
 );
+
+// Self-update: on a fresh APK/web deploy the stored build version differs —
+// clear stale caches and reload once so the user never has to "clear data".
+// Runs after first paint so startup is never blocked by it.
+void runUpdateCheck(isNativeApp()).catch(() => {});
+startWebUpdatePolling();

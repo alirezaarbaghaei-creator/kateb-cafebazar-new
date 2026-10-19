@@ -55,7 +55,11 @@ jobs:
         run: npm ci
 
       - name: Build web application
-        run: npm run build
+        run: |
+          export KATEB_BUILD_VERSION="$(git rev-list --count HEAD)-$(git rev-parse --short HEAD)"
+          echo "KATEB_BUILD_VERSION=$KATEB_BUILD_VERSION" >> $GITHUB_ENV
+          echo "Building web with version $KATEB_BUILD_VERSION"
+          npm run build
 
       - name: Verify dist output
         run: |
@@ -63,6 +67,8 @@ jobs:
           test -n "$(ls dist/assets/*.js 2>/dev/null)" && echo "JS assets OK"
           test -n "$(ls dist/assets/*.css 2>/dev/null)" && echo "CSS assets OK"
           grep -q 'src="/assets/' dist/index.html && echo "Absolute paths OK"
+          test -f dist/version.json && echo "version.json OK ($(cat dist/version.json))"
+          grep -q "__KATEB_SW_VERSION__" dist/sw.js && echo "::error::sw.js was not version-stamped" && exit 1 || echo "sw.js version-stamped OK"
 
       - name: Verify CafeBazaar billing sources
         run: |
@@ -179,6 +185,10 @@ jobs:
 
       - name: Build Release APK
         working-directory: android
+        env:
+          # versionCode MUST rise every release or Android/Bazaar keeps stale data.
+          KATEB_VERSION_CODE: ${{ github.run_number }}
+          KATEB_VERSION_NAME: 1.6.9.${{ github.run_number }}
         run: ./gradlew assembleRelease --stacktrace
 
       - name: Verify APK exists
