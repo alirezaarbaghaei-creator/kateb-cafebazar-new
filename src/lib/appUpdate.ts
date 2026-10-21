@@ -37,17 +37,29 @@ function storedVersion(): string | null {
 function markVersion(v: string): void {
   try {
     localStorage.setItem(VERSION_KEY, v);
-    sessionStorage.setItem(RELOADED_KEY, '1');
   } catch {
     /* storage blocked — nothing to persist */
   }
 }
 
+/**
+ * True when this page load already did the one-shot update reload.
+ * The flag lives in sessionStorage, so it survives the reload() but not a
+ * fresh app start.
+ */
 function alreadyReloadedThisBoot(): boolean {
   try {
     return sessionStorage.getItem(RELOADED_KEY) === '1';
   } catch {
     return true; // can't track → never auto-reload (avoid loops)
+  }
+}
+
+function flagReloaded(): void {
+  try {
+    sessionStorage.setItem(RELOADED_KEY, '1');
+  } catch {
+    /* ignore */
   }
 }
 
@@ -83,6 +95,7 @@ export async function runUpdateCheck(isNative: boolean): Promise<boolean> {
     await clearNativeWebViewCache();
     markVersion(current);
     if (!alreadyReloadedThisBoot()) {
+      flagReloaded();
       window.location.reload();
       return true;
     }
@@ -128,6 +141,7 @@ export function startWebUpdatePolling(intervalMs = 60_000): void {
           /* ignore */
         }
         markVersion(data.version);
+        flagReloaded();
         window.location.reload();
       }
     } catch {

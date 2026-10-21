@@ -15,10 +15,10 @@ android {
         targetSdkVersion rootProject.ext.targetSdkVersion
         // UPDATE FIX: versionCode MUST increase on every release, or Android /
         // Cafe Bazaar treats the new APK as "same version" and keeps running
-        // stale cached data. CI exports KATEB_VERSION_CODE (git commit count);
-        // local builds fall back to 16 so nothing breaks offline.
-        versionCode (System.getenv("KATEB_VERSION_CODE")?.toInteger() ?: 16)
-        versionName System.getenv("KATEB_VERSION_NAME") ?: "1.6.9"
+        // stale cached data. CI exports KATEB_VERSION_CODE; local builds fall
+        // back to 7 so nothing breaks offline.
+        versionCode (System.getenv("KATEB_VERSION_CODE")?.toInteger() ?: 7)
+        versionName System.getenv("KATEB_VERSION_NAME") ?: "1.6.0"
         testInstrumentationRunner "androidx.test.runner.AndroidJUnitRunner"
         aaptOptions {
              // Files and dirs to omit from the packaged assets dir, modified to accommodate modern web apps.

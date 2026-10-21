@@ -186,9 +186,11 @@ jobs:
       - name: Build Release APK
         working-directory: android
         env:
-          # versionCode MUST rise every release or Android/Bazaar keeps stale data.
-          KATEB_VERSION_CODE: ${{ github.run_number }}
-          KATEB_VERSION_NAME: 1.6.9.${{ github.run_number }}
+          # versionCode MUST be higher than the version already on Cafe Bazaar
+          # (1.5.0 published with versionCode 6), otherwise Android treats the
+          # new APK as the same version and never offers the update.
+          KATEB_VERSION_CODE: 7
+          KATEB_VERSION_NAME: 1.6.0
         run: ./gradlew assembleRelease --stacktrace
 
       - name: Verify APK exists
